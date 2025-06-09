@@ -5,6 +5,17 @@ import string
 import time
 from datetime import datetime, timedelta
 
+# Load proxies from file
+with open("proxies.txt", "r") as f:
+    proxy_list = [line.strip() for line in f if line.strip()]
+
+def get_random_proxy():
+    proxy = random.choice(proxy_list)
+    return {
+        "http": f"http://{proxy}",
+        "https": f"http://{proxy}"
+    }
+
 def generate_random_email():
     domains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "protonmail.com"]
     username = ''.join(random.choices(string.ascii_lowercase + string.digits, k=random.randint(6, 12)))
@@ -36,14 +47,13 @@ def follow_user(session_token, user_id):
     data = {"friend_id": user_id}
 
     try:
-        response = requests.post(follow_url, headers=headers, params=params, json=data)
+        response = requests.post(follow_url, headers=headers, params=params, json=data, proxies=get_random_proxy(), timeout=10)
         if response.status_code == 200:
             result = response.json()
             if result.get('results') is True:
                 return True
-    except Exception:
+    except Exception as e:
         pass
-
     return False
 
 def register_deezer_account(user_id):
@@ -77,7 +87,7 @@ def register_deezer_account(user_id):
     }
 
     try:
-        response = requests.post(register_url, headers=headers, params=params, json=data)
+        response = requests.post(register_url, headers=headers, params=params, json=data, proxies=get_random_proxy(), timeout=10)
         response_data = response.json()
         
         if response.status_code == 200:
@@ -88,10 +98,9 @@ def register_deezer_account(user_id):
                     f.write(account_info)
                 print(f"Success! Account created: {email}:asdasd123! | Token: {token}")
                 
-                follow_success = follow_user(token, user_id)
-                if follow_success:
+                if follow_user(token, user_id):
                     print("User followed successfully!")
-    except Exception:
+    except Exception as e:
         pass
 
 def run_forever(user_id):
